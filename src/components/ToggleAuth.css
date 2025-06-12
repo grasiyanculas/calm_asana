@@ -1,0 +1,133 @@
+/* src/components/ToggleAuth.css */
+   .toggle-auth-container {
+     background: linear-gradient(90deg, #7b2cbf, #3a86ff);
+     min-height: 100vh;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     padding: 1rem;
+   }
+
+   .form-container {
+     background: rgba(161, 156, 244, 0.95);
+     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+   }
+
+   .form-input {
+     background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+     border: none;
+     outline: none;
+     transition: all 0.3s ease;
+   }
+
+   .form-input:focus {
+     background: #ffffff;
+     box-shadow: 0 0 10px rgba(58, 134, 255, 0.5);
+     border: 1px solid #3a86ff;
+   }
+
+   .form-input::placeholder {
+     color: #6b7280;
+   }
+
+   .form-button {
+     background: linear-gradient(90deg, #3a86ff, #7b2cbf);
+     box-shadow: 0 4px 15px rgba(58, 134, 255, 0.4);
+     transition: all 0.3s ease;
+   }
+
+   .form-button:hover {
+     background: linear-gradient(90deg, #2a6bff, #6a1cad);
+     transform: translateY(-2px);
+   }
+
+   .social-icon {
+     transition: all 0.3s ease;
+   }
+
+   .social-icon:hover {
+     background: #3a86ff;
+     color: #ffffff;
+     transform: scale(1.1);
+   }
+
+   .toggle-panel {
+     background: linear-gradient(135deg, #3a86ff, #7b2cbf);
+   }
+
+   .toggle-panel-button {
+     transition: all 0.3s ease;
+   }
+
+   .toggle-panel-button:hover {
+     background: #ffffff;
+     color: #3a86ff;
+     transform: translateY(-2px);
+   }
+
+   .error-text {
+     background: rgba(239, 68, 68, 0.1);
+     padding: 8px;
+     border-radius: 8px;
+     border: 1px solid #ef4444;
+   }
+
+   @media screen and (max-width: 650px) {
+     .form-container {
+       width: 100%;
+       height: 80vh;
+       min-height: 600px;
+     }
+
+     .form-container > div:nth-child(1), /* Login Form */
+     .form-container > div:nth-child(2) { /* Register Form */
+       width: 100%;
+       left: 0;
+       right: 0;
+       transform: none;
+       opacity: 0;
+       pointer-events: none;
+       position: static;
+       display: none;
+     }
+
+     .form-container > div:nth-child(1) { /* Login Form visible */
+       display: flex;
+       opacity: 1;
+       pointer-events: auto;
+     }
+
+     .form-container > div.z-10.opacity-100 { /* Register Form when active */
+       display: flex;
+       opacity: 1;
+       pointer-events: auto;
+       transform: none;
+     }
+
+     .toggle-panel {
+       width: 100%;
+       height: 30%;
+       top: 0;
+       left: 0;
+       border-radius: 0 0 20vw 20vw;
+     }
+
+     .toggle-panel.left-1\\/2 {
+       left: 0;
+     }
+   }
+
+   @media screen and (max-width: 400px) {
+     .form-container {
+       padding: 1rem;
+     }
+
+     .toggle-panel h1 {
+       font-size: 1.875rem;
+     }
+
+     .form-container > div:nth-child(1), /* Login Form */
+     .form-container > div:nth-child(2) { /* Register Form */
+       padding: 1.5rem;
+     }
+   }
