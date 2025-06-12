@@ -1,4 +1,7 @@
 /* src/components/ToggleAuth.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
    .toggle-auth-container {
      background: linear-gradient(90deg, #7b2cbf, #3a86ff);
      min-height: 100vh;
@@ -112,7 +115,7 @@
        border-radius: 0 0 20vw 20vw;
      }
 
-     .toggle-panel.left-1\\/2 {
+     .toggle-panel.left-1\\ {
        left: 0;
      }
    }
