@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 * {
   margin: 0;
   padding: 0;
@@ -10,7 +11,7 @@
 
 body, html, #root {
   height: 100%;
- /* scroll-behavior: smooth;*/
+  /* scroll-behavior: smooth; */
 }
 
 /* Global Background */
@@ -160,11 +161,12 @@ section#features h3 {
 
 .feature-card {
   padding: 2rem;
-  background: linear-gradient(to bottom right, #f3e8ff, #dbeafe); /* Light purple to light blue */
+  background: linear-gradient(to bottom right, #c18ef7, #76a4e0); /* Light purple to light blue */
   border-radius: 0.75rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   animation: fadeInUp 1s ease-out 0.4s both;
+  cursor: pointer; /* Indicate clickable */
 }
 
 .feature-card:hover {
@@ -182,7 +184,18 @@ section#features h3 {
 .feature-card p {
   font-size: 1rem;
   color: #080214; /* Gray 600 */
-  
+}
+
+/* Feature Explanation Panel */
+.feature-explanation {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: #6d32db;
+  border-radius: 4px;
+  color: #4b5563; /* Gray 600 */
+  font-size: 0.875rem;
+  line-height: 1.5;
+  animation: fadeInUp 0.5s ease-out;
 }
 
 /* About Section */

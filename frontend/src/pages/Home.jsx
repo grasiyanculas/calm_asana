@@ -1,9 +1,30 @@
-// src/pages/Home.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 
 function Home() {
+  // State to manage which feature's explanation is visible
+  const [selectedFeature, setSelectedFeature] = useState(null);
+
+  // Feature data with explanations
+  const features = [
+    {
+      title: '🧘 Personalized Routines',
+      description: 'Receive custom yoga plans tailored to your age, health conditions, fitness level, and goals for a safe and effective practice.',
+      content: 'Custom yoga plans based on your health, age, and goals.',
+    },
+    {
+      title: '📹 Real-Time Pose Feedback',
+      description: 'Use your webcam to get AI-powered feedback on your posture, ensuring proper alignment and reducing injury risk during practice.',
+      content: 'AI-powered posture correction using your webcam.',
+    },
+    {
+      title: '📊 Progress Reports',
+      description: 'Track your yoga journey with detailed reports, including performance metrics and improvement trends, to stay motivated.',
+      content: 'Track your improvement over time.',
+    },
+  ];
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <header className="bg-white shadow-md">
@@ -40,18 +61,21 @@ function Home() {
       <section id="features" className="py-20 bg-white text-center">
         <h3 className="text-3xl font-bold mb-10 text-gray-800">Features</h3>
         <div className="features-grid">
-          <div className="feature-card">
-            <h4>🧘 Personalized Routines</h4>
-            <p>Custom yoga plans based on your health, age, and goals.</p>
-          </div>
-          <div className="feature-card">
-            <h4>📹 Real-Time Pose Feedback</h4>
-            <p>AI-powered posture correction using your webcam.</p>
-          </div>
-          <div className="feature-card">
-            <h4>📊 Progress Reports</h4>
-            <p>Track your improvement over time.</p>
-          </div>
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              className="feature-card"
+              onClick={() => setSelectedFeature(feature.title === selectedFeature ? null : feature.title)}
+            >
+              <h4>{feature.title}</h4>
+              <p>{feature.content}</p>
+              {selectedFeature === feature.title && (
+                <div className="feature-explanation">
+                  <p className="text-sm text-gray-600 mt-2">{feature.description}</p>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </section>
 
@@ -59,7 +83,7 @@ function Home() {
         <div className="max-w-4xl mx-auto px-6">
           <h3 className="text-3xl font-bold mb-4 text-gray-800">About CalmAsana</h3>
           <p className="text-gray-700 text-lg">
-            CalmAsana helps you practice yoga safely at home with AI-based feedback, personalized routines, and progress tracking.
+            Discover a personalized yoga experience designed just for you. With AI-powered feedback, custom routines tailored to your needs, and progress tracking, CalmAsana helps you practice safely and effectively from home. Start your journey to wellness today!
           </p>
         </div>
       </section>

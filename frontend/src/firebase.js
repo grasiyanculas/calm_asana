@@ -4,12 +4,13 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA8aZhUBQXTNSgltYGp_xccEEv4IVBbM5o",
-  authDomain: "calmasana-dc908.firebaseapp.com",
-  projectId: "calmasana-dc908",
-  storageBucket: "calmasana-dc908.firebasestorage.app",
-  messagingSenderId: "666845426711",
-  appId: "1:666845426711:web:247a089b538aec3cac5852"
+ apiKey: "AIzaSyDQw9YcDp3DiqpNf_qvlYOXqtZsNASQ5wk",
+  authDomain: "calm----asana.firebaseapp.com",
+  projectId: "calm----asana",
+  storageBucket: "calm----asana.firebasestorage.app",
+  messagingSenderId: "560144960579",
+  appId: "1:560144960579:web:8fdab9d2ee7b21807b98f6",
+  measurementId: "G-FRBGP7ZG7J"
 };
 
 const app = initializeApp(firebaseConfig);
