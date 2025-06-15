@@ -13,14 +13,6 @@ function UserQuestionnaire() {
     yogaExperience: '', // years of practice
     height: '',
     weight: '',
-    flexibilityLevel: '', // New: beginner, intermediate, advanced
-    focusAreas: [], // New: back, legs, core, shoulders, hips
-    stressRelief: false, // New: yes/no for stress reduction
-    practiceEnvironment: [], // New: quiet space, mat, blocks, straps
-    practiceFrequency: '', // New: daily, 3-5 times/week, 1-2 times/week
-    preferredTime: '', // New: morning, afternoon, evening
-    durationPreference: '', // New: 15 min, 30 min, 60 min
-    energyLevel: '', // New: low, moderate, high
     goals: [], // fitness, stress relief, sleep, flexibility, strength, balance
     healthConditions: {
       backPain: false,
@@ -28,7 +20,6 @@ function UserQuestionnaire() {
       highBloodPressure: false,
       diabetes: false,
       otherIllnesses: '',
-      injuries: '', // New: specific injuries
     },
   });
   const [error, setError] = useState(null);
@@ -45,34 +36,15 @@ function UserQuestionnaire() {
           ? [...prev.goals, value]
           : prev.goals.filter((goal) => goal !== value),
       }));
-    } else if (type === 'checkbox' && name === 'focusAreas') {
-      setFormData((prev) => ({
-        ...prev,
-        focusAreas: checked
-          ? [...prev.focusAreas, value]
-          : prev.focusAreas.filter((area) => area !== value),
-      }));
-    } else if (type === 'checkbox' && name === 'practiceEnvironment') {
-      setFormData((prev) => ({
-        ...prev,
-        practiceEnvironment: checked
-          ? [...prev.practiceEnvironment, value]
-          : prev.practiceEnvironment.filter((item) => item !== value),
-      }));
-    } else if (type === 'checkbox' && name === 'stressRelief') {
-      setFormData((prev) => ({
-        ...prev,
-        stressRelief: checked,
-      }));
     } else if (type === 'checkbox' && name in formData.healthConditions) {
       setFormData((prev) => ({
         ...prev,
         healthConditions: { ...prev.healthConditions, [name]: checked },
       }));
-    } else if (name === 'otherIllnesses' || name === 'injuries') {
+    } else if (name === 'otherIllnesses') {
       setFormData((prev) => ({
         ...prev,
-        healthConditions: { ...prev.healthConditions, [name]: value },
+        healthConditions: { ...prev.healthConditions, otherIllnesses: value },
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -186,13 +158,6 @@ function UserQuestionnaire() {
       yogaExperience,
       goals,
       healthConditions,
-      flexibilityLevel,
-      focusAreas,
-      stressRelief,
-      practiceFrequency,
-      preferredTime,
-      durationPreference,
-      energyLevel,
     } = formData;
     let filteredPoses = poses;
 
@@ -215,7 +180,7 @@ function UserQuestionnaire() {
     if (healthConditions.diabetes) {
       filteredPoses = filteredPoses.filter((pose) => pose.safeFor.includes('diabetes'));
     }
-    if (healthConditions.otherIllnesses || healthConditions.injuries) {
+    if (healthConditions.otherIllnesses) {
       filteredPoses = filteredPoses.filter((pose) => pose.intensity !== 'high');
     }
     if (fitnessLevel === 'beginner') {
@@ -223,33 +188,8 @@ function UserQuestionnaire() {
     } else if (fitnessLevel === 'intermediate') {
       filteredPoses = filteredPoses.filter((pose) => pose.level !== 'advanced');
     }
-    if (flexibilityLevel === 'beginner') {
-      filteredPoses = filteredPoses.filter((pose) => pose.level === 'beginner');
-    }
-    if (stressRelief) {
-      filteredPoses = filteredPoses.filter((pose) => pose.goals.includes('stress relief'));
-    }
-    if (practiceFrequency === '1-2 times/week') {
-      filteredPoses = filteredPoses.filter((pose) => pose.intensity === 'low');
-    }
-    if (preferredTime === 'morning') {
-      filteredPoses = filteredPoses.filter((pose) => pose.intensity !== 'low');
-    } else if (preferredTime === 'evening') {
-      filteredPoses = filteredPoses.filter((pose) => pose.goals.includes('stress relief'));
-    }
-    if (durationPreference === '15 min') {
-      filteredPoses = filteredPoses.filter((pose) => pose.intensity === 'low');
-    } else if (durationPreference === '60 min') {
-      filteredPoses = filteredPoses.filter((pose) => pose.intensity !== 'low');
-    }
-    if (energyLevel === 'low') {
-      filteredPoses = filteredPoses.filter((pose) => pose.goals.includes('stress relief'));
-    } else if (energyLevel === 'high') {
-      filteredPoses = filteredPoses.filter((pose) => pose.goals.includes('fitness') || pose.goals.includes('strength'));
-    }
     filteredPoses = filteredPoses.filter((pose) =>
-      pose.goals.some((goal) => goals.includes(goal)) ||
-      (focusAreas.length > 0 && focusAreas.some(area => pose.benefits.toLowerCase().includes(area.toLowerCase())))
+      pose.goals.some((goal) => goals.includes(goal))
     );
 
     // Scoring system with rule-based adjustments
@@ -259,11 +199,6 @@ function UserQuestionnaire() {
       // Goal alignment (30 points per matching goal)
       pose.goals.forEach((goal) => {
         if (goals.includes(goal)) score += 30;
-      });
-
-      // Focus areas alignment (20 points per matching area)
-      focusAreas.forEach((area) => {
-        if (pose.benefits.toLowerCase().includes(area.toLowerCase())) score += 20;
       });
 
       // BMI-based adjustments
@@ -288,33 +223,17 @@ function UserQuestionnaire() {
       if (experienceYears >= 1 && experienceYears < 3 && pose.level !== 'advanced') score += 15;
       if (experienceYears >= 3 && pose.level === 'intermediate') score += 10;
 
-      // Flexibility adjustments
-      if (flexibilityLevel === 'beginner' && pose.level === 'beginner') score += 15;
-      if (flexibilityLevel === 'intermediate' && pose.level !== 'advanced') score += 10;
-
-      // Stress relief adjustment
-      if (stressRelief && pose.goals.includes('stress relief')) score += 20;
-
-      // Practice frequency adjustment
-      if (practiceFrequency === '1-2 times/week' && pose.intensity === 'low') score += 15;
-
-      // Preferred time adjustment
-      if (preferredTime === 'morning' && (pose.goals.includes('fitness') || pose.goals.includes('strength'))) score += 15;
-      if (preferredTime === 'evening' && pose.goals.includes('stress relief')) score += 15;
-
-      // Duration preference adjustment
-      if (durationPreference === '15 min' && pose.intensity === 'low') score += 10;
-      if (durationPreference === '60 min' && pose.intensity === 'high') score += 10;
-
-      // Energy level adjustment
-      if (energyLevel === 'low' && pose.goals.includes('stress relief')) score += 15;
-      if (energyLevel === 'high' && (pose.goals.includes('fitness') || pose.goals.includes('strength'))) score += 15;
-
       // Health condition adjustments
       if (healthConditions.backPain && pose.safeFor.includes('backPain')) score += 15;
       if (isPregnant && pose.safeFor.includes('pregnant')) score += 15;
       if (healthConditions.highBloodPressure && !pose.contraindications?.includes('highBloodPressure')) score += 10;
       if (healthConditions.diabetes && pose.safeFor.includes('diabetes')) score += 10;
+
+      // Goal-specific prioritization
+      if (goals.includes('sleep') && pose.goals.includes('sleep')) score += 10;
+      if (goals.includes('strength') && pose.goals.includes('strength')) score += 10;
+      if (goals.includes('flexibility') && pose.goals.includes('flexibility')) score += 10;
+      if (goals.includes('balance') && pose.goals.includes('balance')) score += 10;
 
       return { ...pose, score };
     });
@@ -376,75 +295,15 @@ function UserQuestionnaire() {
         setError('Please enter your yoga experience.');
         return;
       }
-      setStep(7); // Move to Flexibility Level
+      setStep(7); // Move to Goals
       return;
     }
     if (step === 7) {
-      if (!formData.flexibilityLevel) {
-        setError('Please select your flexibility level.');
-        return;
-      }
-      setStep(8); // Move to Focus Areas
-      return;
-    }
-    if (step === 8) {
-      if (formData.focusAreas.length === 0) {
-        setError('Please select at least one focus area.');
-        return;
-      }
-      setStep(9); // Move to Stress Relief
-      return;
-    }
-    if (step === 9) {
-      setStep(10); // Move to Practice Environment
-      return;
-    }
-    if (step === 10) {
-      if (formData.practiceEnvironment.length === 0) {
-        setError('Please select at least one practice environment option.');
-        return;
-      }
-      setStep(11); // Move to Practice Frequency
-      return;
-    }
-    if (step === 11) {
-      if (!formData.practiceFrequency) {
-        setError('Please select your practice frequency.');
-        return;
-      }
-      setStep(12); // Move to Preferred Time
-      return;
-    }
-    if (step === 12) {
-      if (!formData.preferredTime) {
-        setError('Please select your preferred practice time.');
-        return;
-      }
-      setStep(13); // Move to Duration Preference
-      return;
-    }
-    if (step === 13) {
-      if (!formData.durationPreference) {
-        setError('Please select your session duration preference.');
-        return;
-      }
-      setStep(14); // Move to Energy Level
-      return;
-    }
-    if (step === 14) {
-      if (!formData.energyLevel) {
-        setError('Please select your energy level.');
-        return;
-      }
-      setStep(15); // Move to Goals
-      return;
-    }
-    if (step === 15) {
       if (formData.goals.length === 0) {
         setError('Please select at least one goal.');
         return;
       }
-      setStep(16); // Move to Health Conditions
+      setStep(8); // Move to Health Conditions
       return;
     }
   };
@@ -477,7 +336,7 @@ function UserQuestionnaire() {
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
         <form
-          onSubmit={step === 16 ? handleSubmit : (e) => e.preventDefault()}
+          onSubmit={step === 8 ? handleSubmit : (e) => e.preventDefault()}
           className="space-y-6"
         >
           {step === 1 && (
@@ -682,293 +541,6 @@ function UserQuestionnaire() {
 
           {step === 7 && (
             <div>
-              <label htmlFor="flexibilityLevel" className="block text-gray-700 font-medium mb-2">
-                Flexibility Level
-              </label>
-              <select
-                id="flexibilityLevel"
-                name="flexibilityLevel"
-                value={formData.flexibilityLevel}
-                onChange={handleChange}
-                className="w-full p-3 bg-gray-100 rounded-lg border-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Flexibility Level</option>
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition"
-              >
-                Next
-              </button>
-            </div>
-          )}
-
-          {step === 8 && (
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">Focus Areas</label>
-              <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="focusAreas"
-                    value="back"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Back
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="focusAreas"
-                    value="legs"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Legs
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="focusAreas"
-                    value="core"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Core
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="focusAreas"
-                    value="shoulders"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Shoulders
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="focusAreas"
-                    value="hips"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Hips
-                </label>
-              </div>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition"
-              >
-                Next
-              </button>
-            </div>
-          )}
-
-          {step === 9 && (
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Are you looking to reduce stress or improve mental well-being?
-              </label>
-              <div className="flex space-x-4">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="stressRelief"
-                    checked={formData.stressRelief}
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Yes
-                </label>
-              </div>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition"
-              >
-                Next
-              </button>
-            </div>
-          )}
-
-          {step === 10 && (
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">Practice Environment</label>
-              <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="practiceEnvironment"
-                    value="quiet space"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Quiet Space
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="practiceEnvironment"
-                    value="mat"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Mat
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="practiceEnvironment"
-                    value="blocks"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Blocks
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="practiceEnvironment"
-                    value="straps"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Straps
-                </label>
-              </div>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition"
-              >
-                Next
-              </button>
-            </div>
-          )}
-
-          {step === 11 && (
-            <div>
-              <label htmlFor="practiceFrequency" className="block text-gray-700 font-medium mb-2">
-                Practice Frequency
-              </label>
-              <select
-                id="practiceFrequency"
-                name="practiceFrequency"
-                value={formData.practiceFrequency}
-                onChange={handleChange}
-                className="w-full p-3 bg-gray-100 rounded-lg border-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Practice Frequency</option>
-                <option value="daily">Daily</option>
-                <option value="3-5 times/week">3-5 times/week</option>
-                <option value="1-2 times/week">1-2 times/week</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition"
-              >
-                Next
-              </button>
-            </div>
-          )}
-
-          {step === 12 && (
-            <div>
-              <label htmlFor="preferredTime" className="block text-gray-700 font-medium mb-2">
-                What time of day do you prefer to practice?
-              </label>
-              <select
-                id="preferredTime"
-                name="preferredTime"
-                value={formData.preferredTime}
-                onChange={handleChange}
-                className="w-full p-3 bg-gray-100 rounded-lg border-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Preferred Time</option>
-                <option value="morning">Morning</option>
-                <option value="afternoon">Afternoon</option>
-                <option value="evening">Evening</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition"
-              >
-                Next
-              </button>
-            </div>
-          )}
-
-          {step === 13 && (
-            <div>
-              <label htmlFor="durationPreference" className="block text-gray-700 font-medium mb-2">
-                How long do you want each session to be?
-              </label>
-              <select
-                id="durationPreference"
-                name="durationPreference"
-                value={formData.durationPreference}
-                onChange={handleChange}
-                className="w-full p-3 bg-gray-100 rounded-lg border-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Duration</option>
-                <option value="15 min">15 min</option>
-                <option value="30 min">30 min</option>
-                <option value="60 min">60 min</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition"
-              >
-                Next
-              </button>
-            </div>
-          )}
-
-          {step === 14 && (
-            <div>
-              <label htmlFor="energyLevel" className="block text-gray-700 font-medium mb-2">
-                How would you describe your current energy level?
-              </label>
-              <select
-                id="energyLevel"
-                name="energyLevel"
-                value={formData.energyLevel}
-                onChange={handleChange}
-                className="w-full p-3 bg-gray-100 rounded-lg border-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Energy Level</option>
-                <option value="low">Low</option>
-                <option value="moderate">Moderate</option>
-                <option value="high">High</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition"
-              >
-                Next
-              </button>
-            </div>
-          )}
-
-          {step === 15 && (
-            <div>
               <label className="block text-gray-700 font-medium mb-2">Goals</label>
               <div className="space-y-2">
                 <label className="flex items-center">
@@ -1042,7 +614,7 @@ function UserQuestionnaire() {
             </div>
           )}
 
-          {step === 16 && (
+          {step === 8 && (
             <div>
               <label className="block text-gray-700 font-medium mb-2">Health Conditions</label>
               <div className="space-y-2">
@@ -1093,16 +665,6 @@ function UserQuestionnaire() {
                   name="otherIllnesses"
                   placeholder="Describe any other illnesses"
                   value={formData.healthConditions.otherIllnesses}
-                  onChange={handleChange}
-                  className="w-full p-3 bg-gray-100 rounded-lg border-none focus:ring-2 focus:ring-blue-500"
-                />
-                <label className="block text-gray-700 font-medium mt-4 mb-2">
-                  Specific Injuries
-                </label>
-                <textarea
-                  name="injuries"
-                  placeholder="Describe any specific injuries"
-                  value={formData.healthConditions.injuries}
                   onChange={handleChange}
                   className="w-full p-3 bg-gray-100 rounded-lg border-none focus:ring-2 focus:ring-blue-500"
                 />
