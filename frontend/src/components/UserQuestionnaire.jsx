@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
 function UserQuestionnaire() {
+  const navigate = useNavigate();
+  const user = auth.currentUser;
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     age: '',
@@ -13,14 +15,13 @@ function UserQuestionnaire() {
     yogaExperience: '', // years of practice
     height: '',
     weight: '',
-    flexibilityLevel: '', // New: beginner, intermediate, advanced
-    focusAreas: [], // New: back, legs, core, shoulders, hips
-    stressRelief: false, // New: yes/no for stress reduction
-    practiceEnvironment: [], // New: quiet space, mat, blocks, straps
-    practiceFrequency: '', // New: daily, 3-5 times/week, 1-2 times/week
-    preferredTime: '', // New: morning, afternoon, evening
-    durationPreference: '', // New: 15 min, 30 min, 60 min
-    energyLevel: '', // New: low, moderate, high
+    flexibilityLevel: '', // beginner, intermediate, advanced
+    focusAreas: [], // back, legs, core, shoulders, hips
+    practiceEnvironment: [], // quiet space, mat, blocks, straps
+    practiceFrequency: '', // daily, 3-5 times/week, 1-2 times/week
+    preferredTime: '', // morning, afternoon, evening
+    durationPreference: '', // 15 min, 30 min, 60 min
+    energyLevel: '', // low, moderate, high
     goals: [], // fitness, stress relief, sleep, flexibility, strength, balance
     healthConditions: {
       backPain: false,
@@ -28,13 +29,20 @@ function UserQuestionnaire() {
       highBloodPressure: false,
       diabetes: false,
       otherIllnesses: '',
-      injuries: '', // New: specific injuries
+      injuries: '', // specific injuries
     },
   });
   const [error, setError] = useState(null);
   const [bmiResult, setBmiResult] = useState(null);
   const [suggestedPoses, setSuggestedPoses] = useState([]);
-  const navigate = useNavigate();
+
+  // Redirect unauthenticated users
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (!user) navigate('/');
+    });
+    return () => unsubscribe();
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -59,11 +67,6 @@ function UserQuestionnaire() {
           ? [...prev.practiceEnvironment, value]
           : prev.practiceEnvironment.filter((item) => item !== value),
       }));
-    } else if (type === 'checkbox' && name === 'stressRelief') {
-      setFormData((prev) => ({
-        ...prev,
-        stressRelief: checked,
-      }));
     } else if (type === 'checkbox' && name in formData.healthConditions) {
       setFormData((prev) => ({
         ...prev,
@@ -78,8 +81,8 @@ function UserQuestionnaire() {
       setFormData((prev) => ({ ...prev, [name]: value }));
       // Calculate BMI if height or weight changes and both are valid
       if ((name === 'height' || name === 'weight') && formData.height && formData.weight) {
-        const heightNum = parseInt(formData.height);
-        const weightNum = parseInt(formData.weight);
+        const heightNum = parseFloat(formData.height);
+        const weightNum = parseFloat(formData.weight);
         if (heightNum > 0 && weightNum > 0) {
           const bmi = calculateBMI(heightNum, weightNum);
           setBmiResult(bmi);
@@ -124,8 +127,11 @@ function UserQuestionnaire() {
         name: 'Mountain Pose',
         level: 'beginner',
         goals: ['stress relief', 'sleep', 'balance'],
+        focusAreas: ['back', 'core'],
         safeFor: ['backPain', 'pregnant', 'highBloodPressure', 'diabetes'],
         intensity: 'low',
+        duration: '15 min',
+        environment: ['quiet space', 'mat'],
         benefits: 'Improves posture and balance, reduces stress.',
         instructions: 'Stand tall with feet together, arms at sides, and breathe deeply.',
       },
@@ -133,8 +139,11 @@ function UserQuestionnaire() {
         name: 'Child’s Pose',
         level: 'beginner',
         goals: ['stress relief', 'sleep', 'flexibility'],
+        focusAreas: ['back', 'hips'],
         safeFor: ['pregnant', 'highBloodPressure', 'diabetes'],
         intensity: 'low',
+        duration: '15 min',
+        environment: ['quiet space', 'mat'],
         benefits: 'Relaxes the body, promotes sleep, stretches hips.',
         instructions: 'Kneel, sit back on heels, stretch arms forward, and rest forehead on the ground.',
       },
@@ -142,8 +151,11 @@ function UserQuestionnaire() {
         name: 'Downward Dog',
         level: 'beginner',
         goals: ['fitness', 'stress relief', 'flexibility'],
+        focusAreas: ['back', 'legs', 'shoulders'],
         safeFor: [],
         intensity: 'moderate',
+        duration: '30 min',
+        environment: ['mat'],
         benefits: 'Strengthens arms and legs, stretches back.',
         instructions: 'Start on hands and knees, lift hips to form an inverted V, and press heels down.',
         contraindications: ['highBloodPressure', 'carpalTunnel'],
@@ -152,8 +164,11 @@ function UserQuestionnaire() {
         name: 'Cat-Cow Pose',
         level: 'beginner',
         goals: ['stress relief', 'sleep', 'flexibility'],
+        focusAreas: ['back'],
         safeFor: ['pregnant', 'backPain', 'diabetes'],
         intensity: 'low',
+        duration: '15 min',
+        environment: ['quiet space', 'mat'],
         benefits: 'Improves spinal flexibility, reduces tension.',
         instructions: 'On hands and knees, alternate arching and rounding your back with breath.',
       },
@@ -161,8 +176,11 @@ function UserQuestionnaire() {
         name: 'Warrior II',
         level: 'intermediate',
         goals: ['fitness', 'strength', 'balance'],
+        focusAreas: ['legs', 'core'],
         safeFor: [],
         intensity: 'high',
+        duration: '30 min',
+        environment: ['mat'],
         benefits: 'Builds strength and stamina, improves focus.',
         instructions: 'Step one foot back, bend front knee, extend arms parallel to the ground, and gaze forward.',
         contraindications: ['kneeInjury', 'highBloodPressure'],
@@ -171,8 +189,11 @@ function UserQuestionnaire() {
         name: 'Plank Pose',
         level: 'intermediate',
         goals: ['fitness', 'strength'],
+        focusAreas: ['core', 'shoulders'],
         safeFor: ['diabetes'],
         intensity: 'high',
+        duration: '30 min',
+        environment: ['mat'],
         benefits: 'Strengthens core and arms, boosts endurance.',
         instructions: 'Hold a push-up position with body in a straight line, engaging core.',
         contraindications: ['backPain', 'boneFractures'],
@@ -188,11 +209,11 @@ function UserQuestionnaire() {
       healthConditions,
       flexibilityLevel,
       focusAreas,
-      stressRelief,
       practiceFrequency,
       preferredTime,
       durationPreference,
       energyLevel,
+      practiceEnvironment,
     } = formData;
     let filteredPoses = poses;
 
@@ -226,9 +247,6 @@ function UserQuestionnaire() {
     if (flexibilityLevel === 'beginner') {
       filteredPoses = filteredPoses.filter((pose) => pose.level === 'beginner');
     }
-    if (stressRelief) {
-      filteredPoses = filteredPoses.filter((pose) => pose.goals.includes('stress relief'));
-    }
     if (practiceFrequency === '1-2 times/week') {
       filteredPoses = filteredPoses.filter((pose) => pose.intensity === 'low');
     }
@@ -247,10 +265,21 @@ function UserQuestionnaire() {
     } else if (energyLevel === 'high') {
       filteredPoses = filteredPoses.filter((pose) => pose.goals.includes('fitness') || pose.goals.includes('strength'));
     }
-    filteredPoses = filteredPoses.filter((pose) =>
-      pose.goals.some((goal) => goals.includes(goal)) ||
-      (focusAreas.length > 0 && focusAreas.some(area => pose.benefits.toLowerCase().includes(area.toLowerCase())))
-    );
+    if (focusAreas.length > 0) {
+      filteredPoses = filteredPoses.filter((pose) =>
+        pose.focusAreas.some((area) => focusAreas.includes(area))
+      );
+    }
+    if (practiceEnvironment.length > 0) {
+      filteredPoses = filteredPoses.filter((pose) =>
+        pose.environment.some((env) => practiceEnvironment.includes(env))
+      );
+    }
+    if (goals.length > 0) {
+      filteredPoses = filteredPoses.filter((pose) =>
+        pose.goals.some((goal) => goals.includes(goal))
+      );
+    }
 
     // Scoring system with rule-based adjustments
     const scoredPoses = filteredPoses.map((pose) => {
@@ -262,8 +291,13 @@ function UserQuestionnaire() {
       });
 
       // Focus areas alignment (20 points per matching area)
-      focusAreas.forEach((area) => {
-        if (pose.benefits.toLowerCase().includes(area.toLowerCase())) score += 20;
+      pose.focusAreas.forEach((area) => {
+        if (focusAreas.includes(area)) score += 20;
+      });
+
+      // Environment alignment (10 points per matching environment)
+      pose.environment.forEach((env) => {
+        if (practiceEnvironment.includes(env)) score += 10;
       });
 
       // BMI-based adjustments
@@ -291,9 +325,6 @@ function UserQuestionnaire() {
       // Flexibility adjustments
       if (flexibilityLevel === 'beginner' && pose.level === 'beginner') score += 15;
       if (flexibilityLevel === 'intermediate' && pose.level !== 'advanced') score += 10;
-
-      // Stress relief adjustment
-      if (stressRelief && pose.goals.includes('stress relief')) score += 20;
 
       // Practice frequency adjustment
       if (practiceFrequency === '1-2 times/week' && pose.intensity === 'low') score += 15;
@@ -339,7 +370,7 @@ function UserQuestionnaire() {
       return;
     }
     if (step === 2) {
-      if (formData.gender === 'male') {
+      if (formData.gender === 'male' || formData.gender === 'other') {
         setFormData((prev) => ({ ...prev, isPregnant: false }));
         setStep(4); // Skip pregnancy question, move to Height/Weight
       } else if (formData.gender === 'female') {
@@ -351,12 +382,12 @@ function UserQuestionnaire() {
       setError('Please answer the pregnancy question.');
       return;
     }
-    if (step === 3 && formData.gender === 'female') {
+    if (step === 3) {
       setStep(4); // Move to Height/Weight
       return;
     }
     if (step === 4) {
-      if (!formData.height || !formData.weight || parseInt(formData.height) <= 0 || parseInt(formData.weight) <= 0) {
+      if (!formData.height || !formData.weight || parseFloat(formData.height) <= 0 || parseFloat(formData.weight) <= 0) {
         setError('Please enter valid height and weight (greater than 0).');
         return;
       }
@@ -392,59 +423,55 @@ function UserQuestionnaire() {
         setError('Please select at least one focus area.');
         return;
       }
-      setStep(9); // Move to Stress Relief
+      setStep(9); // Move to Practice Environment
       return;
     }
     if (step === 9) {
-      setStep(10); // Move to Practice Environment
-      return;
-    }
-    if (step === 10) {
       if (formData.practiceEnvironment.length === 0) {
         setError('Please select at least one practice environment option.');
         return;
       }
-      setStep(11); // Move to Practice Frequency
+      setStep(10); // Move to Practice Frequency
       return;
     }
-    if (step === 11) {
+    if (step === 10) {
       if (!formData.practiceFrequency) {
         setError('Please select your practice frequency.');
         return;
       }
-      setStep(12); // Move to Preferred Time
+      setStep(11); // Move to Preferred Time
       return;
     }
-    if (step === 12) {
+    if (step === 11) {
       if (!formData.preferredTime) {
         setError('Please select your preferred practice time.');
         return;
       }
-      setStep(13); // Move to Duration Preference
+      setStep(12); // Move to Duration Preference
       return;
     }
-    if (step === 13) {
+    if (step === 12) {
       if (!formData.durationPreference) {
         setError('Please select your session duration preference.');
         return;
       }
-      setStep(14); // Move to Energy Level
+      setStep(13); // Move to Energy Level
       return;
     }
-    if (step === 14) {
+    if (step === 13) {
       if (!formData.energyLevel) {
         setError('Please select your energy level.');
         return;
       }
-      setStep(15); // Move to Goals
+      setStep(14); // Move to Goals
       return;
     }
-    if (step === 15) {
+    if (step === 14) {
       if (formData.goals.length === 0) {
         setError('Please select at least one goal.');
         return;
       }
-      setStep(16); // Move to Health Conditions
+      setStep(15); // Move to Health Conditions
       return;
     }
   };
@@ -464,20 +491,24 @@ function UserQuestionnaire() {
       });
       navigate('/poses', { state: { poses } });
     } catch (err) {
+      console.error('Error:', err.message);
       setError('Failed to save data. Please try again.');
     }
   };
+
+  const userName = user?.email?.split('@')[0] || 'User';
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-purple-600 to-blue-400">
       <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full">
         <h2 className="text-3xl font-semibold text-gray-800 text-center mb-6">
-          Tell Us About Yourself
+          Welcome {userName}! Let’s Personalize Your Yoga Journey 🧘
         </h2>
+        <p className="text-center text-gray-600 mb-4">Step {step} of 15</p>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
         <form
-          onSubmit={step === 16 ? handleSubmit : (e) => e.preventDefault()}
+          onSubmit={step === 15 ? handleSubmit : (e) => e.preventDefault()}
           className="space-y-6"
         >
           {step === 1 && (
@@ -528,6 +559,16 @@ function UserQuestionnaire() {
                     className="mr-2"
                   />
                   Female
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="gender"
+                    value="other"
+                    onChange={handleChange}
+                    className="mr-2"
+                  />
+                  Other
                 </label>
               </div>
               <button
@@ -712,56 +753,19 @@ function UserQuestionnaire() {
             <div>
               <label className="block text-gray-700 font-medium mb-2">Focus Areas</label>
               <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="focusAreas"
-                    value="back"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Back
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="focusAreas"
-                    value="legs"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Legs
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="focusAreas"
-                    value="core"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Core
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="focusAreas"
-                    value="shoulders"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Shoulders
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="focusAreas"
-                    value="hips"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Hips
-                </label>
+                {['back', 'legs', 'core', 'shoulders', 'hips'].map((area) => (
+                  <label key={area} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="focusAreas"
+                      value={area}
+                      checked={formData.focusAreas.includes(area)}
+                      onChange={handleChange}
+                      className="mr-2"
+                    />
+                    {area.charAt(0).toUpperCase() + area.slice(1)}
+                  </label>
+                ))}
               </div>
               <button
                 type="button"
@@ -775,20 +779,21 @@ function UserQuestionnaire() {
 
           {step === 9 && (
             <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Are you looking to reduce stress or improve mental well-being?
-              </label>
-              <div className="flex space-x-4">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="stressRelief"
-                    checked={formData.stressRelief}
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Yes
-                </label>
+              <label className="block text-gray-700 font-medium mb-2">Practice Environment</label>
+              <div className="space-y-2">
+                {['quiet space', 'mat', 'blocks', 'straps'].map((env) => (
+                  <label key={env} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="practiceEnvironment"
+                      value={env}
+                      checked={formData.practiceEnvironment.includes(env)}
+                      onChange={handleChange}
+                      className="mr-2"
+                    />
+                    {env.charAt(0).toUpperCase() + env.slice(1).replace(/([A-Z])/g, ' $1')}
+                  </label>
+                ))}
               </div>
               <button
                 type="button"
@@ -801,61 +806,6 @@ function UserQuestionnaire() {
           )}
 
           {step === 10 && (
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">Practice Environment</label>
-              <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="practiceEnvironment"
-                    value="quiet space"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Quiet Space
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="practiceEnvironment"
-                    value="mat"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Mat
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="practiceEnvironment"
-                    value="blocks"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Blocks
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="practiceEnvironment"
-                    value="straps"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Straps
-                </label>
-              </div>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition"
-              >
-                Next
-              </button>
-            </div>
-          )}
-
-          {step === 11 && (
             <div>
               <label htmlFor="practiceFrequency" className="block text-gray-700 font-medium mb-2">
                 Practice Frequency
@@ -883,7 +833,7 @@ function UserQuestionnaire() {
             </div>
           )}
 
-          {step === 12 && (
+          {step === 11 && (
             <div>
               <label htmlFor="preferredTime" className="block text-gray-700 font-medium mb-2">
                 What time of day do you prefer to practice?
@@ -911,7 +861,7 @@ function UserQuestionnaire() {
             </div>
           )}
 
-          {step === 13 && (
+          {step === 12 && (
             <div>
               <label htmlFor="durationPreference" className="block text-gray-700 font-medium mb-2">
                 How long do you want each session to be?
@@ -939,7 +889,7 @@ function UserQuestionnaire() {
             </div>
           )}
 
-          {step === 14 && (
+          {step === 13 && (
             <div>
               <label htmlFor="energyLevel" className="block text-gray-700 font-medium mb-2">
                 How would you describe your current energy level?
@@ -967,70 +917,23 @@ function UserQuestionnaire() {
             </div>
           )}
 
-          {step === 15 && (
+          {step === 14 && (
             <div>
               <label className="block text-gray-700 font-medium mb-2">Goals</label>
               <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="goals"
-                    value="fitness"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Fitness
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="goals"
-                    value="stress relief"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Stress Relief
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="goals"
-                    value="sleep"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Improve Sleep
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="goals"
-                    value="flexibility"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Flexibility
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="goals"
-                    value="strength"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Strength
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="goals"
-                    value="balance"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Balance
-                </label>
+                {['fitness', 'stress relief', 'sleep', 'flexibility', 'strength', 'balance'].map((goal) => (
+                  <label key={goal} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="goals"
+                      value={goal}
+                      checked={formData.goals.includes(goal)}
+                      onChange={handleChange}
+                      className="mr-2"
+                    />
+                    {goal.charAt(0).toUpperCase() + goal.slice(1).replace(/([A-Z])/g, ' $1')}
+                  </label>
+                ))}
               </div>
               <button
                 type="button"
@@ -1042,50 +945,22 @@ function UserQuestionnaire() {
             </div>
           )}
 
-          {step === 16 && (
+          {step === 15 && (
             <div>
               <label className="block text-gray-700 font-medium mb-2">Health Conditions</label>
               <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="backPain"
-                    checked={formData.healthConditions.backPain}
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Back Pain
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="boneFractures"
-                    checked={formData.healthConditions.boneFractures}
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Bone Fractures
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="highBloodPressure"
-                    checked={formData.healthConditions.highBloodPressure}
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  High Blood Pressure
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="diabetes"
-                    checked={formData.healthConditions.diabetes}
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Diabetes
-                </label>
+                {['backPain', 'boneFractures', 'highBloodPressure', 'diabetes'].map((condition) => (
+                  <label key={condition} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name={condition}
+                      checked={formData.healthConditions[condition]}
+                      onChange={handleChange}
+                      className="mr-2"
+                    />
+                    {condition.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
+                  </label>
+                ))}
                 <label className="block text-gray-700 font-medium mt-4 mb-2">
                   Other Illnesses
                 </label>
