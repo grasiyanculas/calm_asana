@@ -34,7 +34,6 @@ function UserQuestionnaire() {
   });
   const [error, setError] = useState(null);
   const [bmiResult, setBmiResult] = useState(null);
-  const [suggestedPoses, setSuggestedPoses] = useState([]);
 
   // Redirect unauthenticated users
   useEffect(() => {
@@ -482,7 +481,6 @@ function UserQuestionnaire() {
       const userId = auth.currentUser?.uid;
       if (!userId) throw new Error('User not authenticated');
       const poses = suggestPoses();
-      setSuggestedPoses(poses);
       await setDoc(doc(db, 'users', userId), {
         ...formData,
         bmiResult,
